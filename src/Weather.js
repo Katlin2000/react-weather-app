@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import WeatherInfo from "./WeatherInfo";
 import WeatherForecast from "./WeatherForecast";
 import "./Weather.css";
@@ -8,7 +8,15 @@ export default function Weather(props) {
   const [weatherData, setWeatherData] = useState({ ready: false });
   const [city, setCity] = useState(props.defaultCity);
 
+  const search = useCallback(() => {
+    const apiKey = "e5bt54135b02f36048218oa4bf5cb2d1";
+    const apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
+
+    axios.get(apiUrl).then(handleResponse);
+  }, [city]);
+
   function handleResponse(response) {
+    console.log("API response:", response.data);
     setWeatherData({
       ready: true,
       temperature: response.data.temperature.current,
@@ -30,14 +38,11 @@ export default function Weather(props) {
     setCity(event.target.value);
   }
 
-  function search() {
-    const apiKey = "e5bt54135b02f36048218oa4bf5cb2d1";
-    let apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
-    axios.get(apiUrl).then(handleResponse);
-  }
+  useEffect(() => {
+    search();
+  }, [search]);
 
   if (!weatherData.ready) {
-    search();
     return <div>Loading...</div>;
   }
 
@@ -50,8 +55,9 @@ export default function Weather(props) {
               type="search"
               placeholder="Enter a city.."
               className="form-control"
-              autoFocus="on"
+              autoFocus
               onChange={handleCityChange}
+              value={city}
             />
           </div>
           <div className="col-3">
@@ -64,7 +70,7 @@ export default function Weather(props) {
         </div>
       </form>
       <WeatherInfo data={weatherData} />
-      <WeatherForecast />
+      <WeatherForecast city={weatherData.city} />
     </div>
   );
 }
